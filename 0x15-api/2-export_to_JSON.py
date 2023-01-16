@@ -1,40 +1,30 @@
 #!/usr/bin/python3
-"""
-Python script to export data in the JSON format.
-"""
+""" Script that uses JSONPlaceholder API to get information about employee """
 import json
-import requests as r
-from sys import argv
+import requests
+import sys
+
 
 if __name__ == "__main__":
-    employee_id = argv[1]
-    url_user = 'https://jsonplaceholder.typicode.com/users/{}'.format(
-        employee_id)
-    url_todos = 'https://jsonplaceholder.typicode.com/users/{}/todos'.format(
-        employee_id)
+    url = 'https://jsonplaceholder.typicode.com/'
 
-    resp_user = r.get(url_user)
-    resp_todos = r.get(url_todos)
+    userid = sys.argv[1]
+    user = '{}users/{}'.format(url, userid)
+    res = requests.get(user)
+    json_o = res.json()
+    name = json_o.get('username')
 
-    try:
-        users = resp_user.json()
-        user_todos = resp_todos.json()
+    todos = '{}todos?userId={}'.format(url, userid)
+    res = requests.get(todos)
+    tasks = res.json()
+    l_task = []
+    for task in tasks:
+        dict_task = {"task": task.get('title'),
+                     "completed": task.get('completed'),
+                     "username": name}
+        l_task.append(dict_task)
 
-        tasks = list(map(lambda todo: {
-            "task": todo.get('title'),
-            "completed": todo.get('completed'),
-            "username": users.get('username')
-        }, user_todos))
-
-        json_data = {
-            users.get('id'): tasks
-        }
-        json_file = "{}.json".format(users.get('id'))
-
-        with open(json_file, mode='w', encoding='utf-8') as jsons:
-            json.dump(json_data, jsons)
-
-    except Exception as e:
-        print(e)
-Footer
-© 2023 GitHub, Inc.
+    d_task = {str(userid): l_task}
+    filename = '{}.json'.format(userid)
+    with open(filename, mode='w') as f:
+        json.dump(d_task, f)
